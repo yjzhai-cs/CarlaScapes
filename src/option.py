@@ -123,5 +123,11 @@ def get_args():
         default='Town10HD',
         help='The map to load (default: Town15)')
 
+    argparser.add_argument(
+        '--sensor-trick',
+        default=0.1,
+        type=float,
+        help='Sensor trick (default: 1.5)')
+
     args = argparser.parse_args()
     return args

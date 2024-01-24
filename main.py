@@ -30,7 +30,7 @@ def main():
         random.seed(args.seed if args.seed is not None else int(time.time()))
 
         client = carla.Client(args.host, args.port)
-        client.set_timeout(20.0)
+        client.set_timeout(50.0)
         client.load_world(args.map)
         world = client.get_world()
 
@@ -47,7 +47,8 @@ def main():
             map=args.map,
             is_spectator=args.spectator,
             img_width=args.width,
-            img_height=args.height
+            img_height=args.height,
+            sensor_trick=args.sensor_trick,
         )
 
         while True:

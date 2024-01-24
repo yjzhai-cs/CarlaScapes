@@ -152,7 +152,7 @@ def main():
     argparser.add_argument(
         '--map',
         type=str,
-        default='Town10HD',
+        default='Town12',
         help='The map to load (default: Town15)')
 
     args = argparser.parse_args()
@@ -163,7 +163,7 @@ def main():
     walkers_list = []
     all_id = []
     client = carla.Client(args.host, args.port)
-    client.set_timeout(20.0)
+    client.set_timeout(50.0)
     synchronous_master = False
     random.seed(args.seed if args.seed is not None else int(time.time()))
 

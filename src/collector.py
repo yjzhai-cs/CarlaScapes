@@ -36,7 +36,9 @@ class DataCollector(Base):
                  map:str = 'Town01',
                  is_spectator: bool = True,
                  img_width: int = 2048,
-                 img_height: int = 1024,):
+                 img_height: int = 1024,
+                 sensor_trick: float = 1.5,
+                 ):
 
         super().__init__(client=client)
 
@@ -44,6 +46,7 @@ class DataCollector(Base):
         self.is_spectator = is_spectator
         self.img_width = img_width
         self.img_height = img_height
+        self.sensor_trick = sensor_trick
 
         self.save_path = OUTPUT_PATH / f'{map}'
         if os.path.isdir(self.save_path) is False:
@@ -70,6 +73,7 @@ class DataCollector(Base):
         rgb_camera_bp.set_attribute('image_size_x', f'{self.img_width}')
         rgb_camera_bp.set_attribute('image_size_y', f'{self.img_height}')
         rgb_camera_bp.set_attribute('fov', '70')
+        rgb_camera_bp.set_attribute('sensor_tick', f'{self.sensor_trick}')
 
         # camera relative position related to the vehicle
         camera_transform = carla.Transform(carla.Location(x=1.5, z=2.4))
@@ -81,6 +85,8 @@ class DataCollector(Base):
     def build_gnss_sensor(self):
         """Build the gnss sensor for the ego vehicle."""
         gnss_bp = self.blueprint_library.find('sensor.other.gnss')
+        gnss_bp.set_attribute('sensor_tick', f'{self.sensor_trick}')
+
         gnss_transform = carla.Transform(carla.Location(x=1.5, z=2.4))
         gnss = self.world.spawn_actor(gnss_bp, gnss_transform, attach_to=self.ego_vehicle)
         gnss.listen(lambda data: sensor_callback(self.save_path, data, self.sensor_queue, "gnss", self.map_name))
@@ -92,6 +98,7 @@ class DataCollector(Base):
         sem_seg_bp.set_attribute('image_size_x', f'{self.img_width}')
         sem_seg_bp.set_attribute('image_size_y', f'{self.img_height}')
         sem_seg_bp.set_attribute('fov', '70')
+        sem_seg_bp.set_attribute('sensor_tick', f'{self.sensor_trick}')
 
         sem_seg_transform = carla.Transform(carla.Location(x=1.5, z=2.4))
         sem_seg_camera = self.world.spawn_actor(sem_seg_bp, sem_seg_transform, attach_to=self.ego_vehicle)
@@ -104,6 +111,7 @@ class DataCollector(Base):
         ins_seg_bp.set_attribute('image_size_x', f'{self.img_width}')
         ins_seg_bp.set_attribute('image_size_y', f'{self.img_height}')
         ins_seg_bp.set_attribute('fov', '70')
+        ins_seg_bp.set_attribute('sensor_tick', f'{self.sensor_trick}')
 
         ins_seg_transform = carla.Transform(carla.Location(x=1.5, z=2.4))
         ins_seg_camera = self.world.spawn_actor(ins_seg_bp, ins_seg_transform, attach_to=self.ego_vehicle)
@@ -118,12 +126,10 @@ class DataCollector(Base):
 
     def destroy(self):
         """Destroy the actors and sensors. Recovers the settings."""
-        print('Destroying actors')
+        print(f'destroying {len(self.sensor_list)} sensors.')
 
         for sensor in self.world.get_actors().filter('*sensor*'):
             sensor.destroy()
-
-        print('Done.')
 
     def collect(self):
         """Collect the data from the sensors."""
@@ -131,12 +137,13 @@ class DataCollector(Base):
             # set the sectator to follow the ego vehicle
             self.world.get_spectator().set_transform(self.sensor_list[0].get_transform())
 
-            # As the queue is blocking, we will wait in the queue.get() methods
-            # until all the information is processed and we continue with the next frame.
+        # As the queue is blocking, we will wait in the queue.get() methods
+        # until all the information is processed and we continue with the next frame.
         try:
             for i in range(0, len(self.sensor_list)):
                 s_frame = self.sensor_queue.get(True, 1.0)
                 print("    Frame: %d   Sensor: %s" % (s_frame[0], s_frame[1]))
 
         except Empty:
-            print("   Some of the sensor information is missed")
+            pass
+            # print("   Some of the sensor information is missed")
