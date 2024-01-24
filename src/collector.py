@@ -7,7 +7,7 @@ from queue import Queue
 from queue import Empty
 
 from .config import OUTPUT_PATH
-from .env_base import EnvBase
+from .base import Base
 
 
 def sensor_callback(save_path, sensor_data, sensor_queue, sensor_name, map_name):
@@ -30,42 +30,38 @@ def sensor_callback(save_path, sensor_data, sensor_queue, sensor_name, map_name)
     sensor_queue.put((sensor_data.frame, sensor_name))
 
 
-class DataCollector(EnvBase):
-    def __init__(self, ip: str = "localhost",
-                 port: int = 2000,
-                 map_name: str = "Town02",
-                 is_large_map: bool = False,
-                 weather_config: Dict[str, float] = None,
-                 is_sync_mode: bool = True,
+class DataCollector(Base):
+    def __init__(self,
+                 client: carla.Client,
+                 map:str = 'Town01',
                  is_spectator: bool = True,
                  img_width: int = 2048,
                  img_height: int = 1024,):
 
-        super().__init__(ip=ip,
-                       port=port,
-                       map_name=map_name,
-                       is_large_map=is_large_map,
-                       weather_config=weather_config,
-                       is_sync_mode=is_sync_mode)
+        super().__init__(client=client)
 
+        self.map_name = map
         self.is_spectator = is_spectator
         self.img_width = img_width
         self.img_height = img_height
-        self.save_path = OUTPUT_PATH / f'{map_name}'
 
+        self.save_path = OUTPUT_PATH / f'{map}'
         if os.path.isdir(self.save_path) is False:
             os.makedirs(self.save_path)
 
         # create sensor queue
         self.sensor_queue = Queue()
+        self.sensor_list = []
 
-        try:
-            self.build_env()
-            self.build_sensor()
-            self.collect()
-        finally:
-            self.destroy()
-            print(' - Exited.')
+        self.actor_list = self.world.get_actors()
+
+        self.ego_vehicle = None
+        for actor in self.actor_list:
+            if 'role_name' in actor.attributes and actor.attributes['role_name'] == 'hero':
+                self.ego_vehicle = actor
+                break
+
+        self.build_sensor()
 
     def build_rgb_sensor(self):
         """Build the rgb camera for the ego vehicle."""
@@ -120,24 +116,27 @@ class DataCollector(EnvBase):
         self.build_sem_seg_sensor()
         self.build_ins_seg_sensor()
 
-    def collect(self):
-        while True:
-            if self.is_sync_mode:
-                self.world.tick()
+    def destroy(self):
+        """Destroy the actors and sensors. Recovers the settings."""
+        print('Destroying actors')
 
-            if self.is_spectator:
-                # set the sectator to follow the ego vehicle
-                spectator = self.world.get_spectator()
-                transform = self.ego_vehicle.get_transform()
-                spectator.set_transform(carla.Transform(transform.location + carla.Location(z=20),
-                                                        carla.Rotation(pitch=-90)))
+        for sensor in self.world.get_actors().filter('*sensor*'):
+            sensor.destroy()
+
+        print('Done.')
+
+    def collect(self):
+        """Collect the data from the sensors."""
+        if self.is_spectator:
+            # set the sectator to follow the ego vehicle
+            self.world.get_spectator().set_transform(self.sensor_list[0].get_transform())
 
             # As the queue is blocking, we will wait in the queue.get() methods
             # until all the information is processed and we continue with the next frame.
-            try:
-                for i in range(0, len(self.sensor_list)):
-                    s_frame = self.sensor_queue.get(True, 1.0)
-                    print("    Frame: %d   Sensor: %s" % (s_frame[0], s_frame[1]))
+        try:
+            for i in range(0, len(self.sensor_list)):
+                s_frame = self.sensor_queue.get(True, 1.0)
+                print("    Frame: %d   Sensor: %s" % (s_frame[0], s_frame[1]))
 
-            except Empty:
-                print("   Some of the sensor information is missed")
+        except Empty:
+            print("   Some of the sensor information is missed")
