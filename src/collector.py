@@ -1,6 +1,7 @@
 import carla
 import os
 import json
+import cv2
 from typing import Dict
 
 from queue import Queue
@@ -9,6 +10,7 @@ from queue import Empty
 from .config import OUTPUT_PATH
 from .base import Base
 from .bounding import Bounding
+from .util import labels_to_array
 
 def sensor_callback(save_path, sensor_data, sensor_queue, sensor_name, map_name):
     file_name = '%s_%06d_%06d' % (map_name, sensor_data.timestamp, sensor_data.frame)
@@ -26,6 +28,8 @@ def sensor_callback(save_path, sensor_data, sensor_queue, sensor_name, map_name)
             sensor_data.save_to_disk(os.path.join(save_path, f'{file_name}_img.png'))
         if 'semantic_segmentation' == sensor_name:
             sensor_data.save_to_disk(os.path.join(save_path, f'{file_name}_color.png'), carla.ColorConverter.CityScapesPalette)
+            gray_image = labels_to_array(sensor_data)
+            cv2.imwrite(os.path.join(save_path, f'{file_name}_labelIds.png'), gray_image)
         if 'instance_segmentation' == sensor_name:
             sensor_data.save_to_disk(os.path.join(save_path, f'{file_name}_instance.png'))
 

@@ -1,5 +1,29 @@
 
 import numpy as np
+import carla
+
+def to_bgra_array(image):
+    """Convert a CARLA raw image to a BGRA numpy array."""
+    if not isinstance(image, carla.Image):
+        raise ValueError("Argument must be a carla.sensor.Image")
+    array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
+    array = np.reshape(array, (image.height, image.width, 4))
+    return array
+
+def to_rgb_array(image):
+    """Convert a CARLA raw image to a RGB numpy array."""
+    array = to_bgra_array(image)
+    # Convert BGRA to RGB.
+    array = array[:, :, :3]
+    array = array[:, :, ::-1]
+    return array
+
+def labels_to_array(image):
+    """
+    Convert an image containing CARLA semantic segmentation labels to a 2D array
+    containing the label of each pixel.
+    """
+    return to_bgra_array(image)[:, :, 2]
 
 def build_projection_matrix(w, h, fov):
     focal = w / (2.0 * np.tan(fov * np.pi / 360.0))
