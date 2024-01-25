@@ -12,20 +12,22 @@ from .bounding import Bounding
 
 def sensor_callback(save_path, sensor_data, sensor_queue, sensor_name, map_name):
     file_name = '%s_%06d_%06d' % (map_name, sensor_data.timestamp, sensor_data.frame)
-    if 'gnss' == sensor_name:
-        with open(os.path.join(save_path, f'{file_name}_gnss.json'), 'w', encoding='utf-8') as file:
-            data = {
-                'latitude': sensor_data.latitude,
-                'longitude': sensor_data.longitude,
-                'altitude': sensor_data.altitude,
-            }
-            json.dump(data, file)
-    if 'camera' == sensor_name:
-        sensor_data.save_to_disk(os.path.join(save_path, f'{file_name}_img.png'))
-    if 'semantic_segmentation' == sensor_name:
-        sensor_data.save_to_disk(os.path.join(save_path, f'{file_name}_color.png'), carla.ColorConverter.CityScapesPalette)
-    if 'instance_segmentation' == sensor_name:
-        sensor_data.save_to_disk(os.path.join(save_path, f'{file_name}_instance.png'))
+
+    if sensor_data.frame % 100 == 0:
+        if 'gnss' == sensor_name:
+            with open(os.path.join(save_path, f'{file_name}_gnss.json'), 'w', encoding='utf-8') as file:
+                data = {
+                    'latitude': sensor_data.latitude,
+                    'longitude': sensor_data.longitude,
+                    'altitude': sensor_data.altitude,
+                }
+                json.dump(data, file)
+        if 'camera' == sensor_name:
+            sensor_data.save_to_disk(os.path.join(save_path, f'{file_name}_img.png'))
+        if 'semantic_segmentation' == sensor_name:
+            sensor_data.save_to_disk(os.path.join(save_path, f'{file_name}_color.png'), carla.ColorConverter.CityScapesPalette)
+        if 'instance_segmentation' == sensor_name:
+            sensor_data.save_to_disk(os.path.join(save_path, f'{file_name}_instance.png'))
 
     sensor_queue.put((sensor_data.timestamp, sensor_data.frame, sensor_name))
 
@@ -146,7 +148,7 @@ class DataCollector(Base):
                 timestamp, frame, sensor_name = self.sensor_queue.get(True, 1.0)
                 print("    Frame: %d   Sensor: %s" % (frame, sensor_name))
 
-                if sensor_name == 'camera':
+                if sensor_name == 'camera' and frame % 100 == 0:
                     self.bounding_tool.bounding(os.path.join(self.save_path, '%s_%06d_%06d' % (self.map_name, timestamp, frame)))
 
         except Empty:

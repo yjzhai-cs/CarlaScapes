@@ -25,7 +25,7 @@ class Bounding():
         # Initialize the exporter
         writer = Writer(save_path + '_img.png', self.image_w, self.image_h)
 
-        for npc in self.world.get_actors().filter('*vehicle*'):
+        for npc in self.world.get_actors().filter('*pedestrian*'): # vehicle
 
             # Filter out the ego vehicle
             if npc.id != self.ego_vehicle.id:
@@ -33,8 +33,8 @@ class Bounding():
                 bb = npc.bounding_box
                 dist = npc.get_transform().location.distance(self.ego_vehicle.get_transform().location)
 
-                # Filter for the vehicles within 50m
-                if dist < 50:
+                # Filter for the vehicles within 500m
+                if dist < 500:
 
                 # Calculate the dot product between the forward vector
                 # of the vehicle and the vector between the vehicle
@@ -68,7 +68,7 @@ class Bounding():
 
                         # Add the object to the frame (ensure it is inside the image)
                         if x_min > 0 and x_max < self.image_w and y_min > 0 and y_max < self.image_h:
-                            writer.addObject('vehicle', x_min, y_min, x_max, y_max)
+                            writer.addObject('pedestrian', x_min, y_min, x_max, y_max)
 
             # Save the bounding boxes in the scene
         writer.save(save_path + '_bounding_box.xml')

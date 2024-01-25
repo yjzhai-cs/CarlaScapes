@@ -9,7 +9,6 @@ def build_projection_matrix(w, h, fov):
     K[1, 2] = h / 2.0
     return K
 
-
 def get_image_point(loc, K, w2c):
     # Calculate 2D projection of 3D coordinate
 
