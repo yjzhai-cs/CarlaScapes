@@ -3,6 +3,8 @@
 CarlaScapes dataset sampling from [CARLA](http://carla.org) simulator involving 12 different Towns(Town01-Town07, Town10HD, Town11-Town13, Town15). The dataset contains 5000 images with 19 semantic categories and 9 custom categories. The dataset is divided into 4000 training images and 1000 testing images.
 
 
+transform to geo location function
+
 ### Directory Structure
 
 File naming format: `{town}_{timestamp}_{frame}_{type}.{suffix}`. 

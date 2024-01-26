@@ -120,7 +120,7 @@ def get_args():
     argparser.add_argument(
         '--map',
         type=str,
-        default='Town07',
+        default='Town03',
         help='The map to load (default: Town15)')
 
     argparser.add_argument(
