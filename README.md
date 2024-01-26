@@ -64,3 +64,12 @@ _ground_ | (81, 0, 81) | 25
 _bridge_ | (150, 100, 100) | 26
 _rail track_ | (230, 150, 140) | 27
 _guard rail_ | (180, 165, 180) | 28
+
+
+### Reference
+
+[1] [Cityscapes Dataset](https://www.cityscapes-dataset.com)
+
+[2] [CARLA Simulator](http://carla.org)
+
+[3] [carla-semantic-localization](https://github.com/lian999111/carla-semantic-localization/tree/c4844f2f6b8bbc21c8e3e4962954cf01eb673e85)
