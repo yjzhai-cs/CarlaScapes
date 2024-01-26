@@ -60,6 +60,8 @@ def main():
 
             world.step_forward()
 
+            world.see_ego_veh()
+
             if world.all_sensor_data['rgb_camera']['frame'] % 100 == 0:
                 print(f"Frame: {world.all_sensor_data['rgb_camera']['frame']}")
                 recorder.buffering(copy.deepcopy(world.all_sensor_data))
