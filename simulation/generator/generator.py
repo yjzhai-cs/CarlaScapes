@@ -3,6 +3,8 @@ import carla
 from numpy import random
 import logging
 
+from .base import Generator
+
 def get_actor_blueprints(world, filter, generation):
     bps = world.get_blueprint_library().filter(filter)
 
@@ -28,71 +30,59 @@ def get_actor_blueprints(world, filter, generation):
         return []
 
 
-class TrafficGenerator(object):
-    def __init__(self, client: carla.Client,
-                 args,
-    ):
+class TrafficGenerator(Generator):
+    """Traffic Generator Class for generating vehicles and walkers with specified number."""
+    def __init__(self, generator_config: dict, client: carla.Client,):
+        super().__init__(generator_config, client)
 
-        self.client = client
         self.carla_world = self.client.get_world()
-
-        self.args = args
 
         self.vehicles_list = []
         self.walkers_list = []
         self.all_id = []
-        self.synchronous_master = False
+
+        self.number_of_vehicles = self.generator_config['number_of_vehicles']
+        self.number_of_walkers = self.generator_config['number_of_walkers']
+
+        self.synchronous_master = self.generator_config['sync_mode']
+
+        # Set Traffic Manager
+        self.tm = self.client.get_trafficmanager(self.generator_config['tm_port'])
+
+        self.tm.set_global_distance_to_leading_vehicle(self.generator_config['distance_to_leading_vehicle'])
+        self.tm.set_respawn_dormant_vehicles(self.generator_config['respawn_dormant_vehicles'])
+        self.tm.set_hybrid_physics_mode(self.generator_config['hybrid_physics_mode'])
+        self.tm.set_hybrid_physics_radius(self.generator_config['hybrid_physics_radius'])
+
+        if self.generator_config['random_device_seed'] is not None:
+            self.tm.set_random_device_seed(self.generator_config['random_device_seed'])
 
     def generate(self):
-        traffic_manager = self.client.get_trafficmanager(self.args.tm_port)
-        traffic_manager.set_global_distance_to_leading_vehicle(2.5)
-        if self.args.respawn:
-            traffic_manager.set_respawn_dormant_vehicles(True)
-        if self.args.hybrid:
-            traffic_manager.set_hybrid_physics_mode(True)
-            traffic_manager.set_hybrid_physics_radius(70.0)
-        if self.args.seed is not None:
-            traffic_manager.set_random_device_seed(self.args.seed)
-
-        settings = self.world.get_settings()
-        if not self.args.asynch:
-            traffic_manager.set_synchronous_mode(True)
-            if not settings.synchronous_mode:
-                self.synchronous_master = True
-                settings.synchronous_mode = True
-                settings.fixed_delta_seconds = 0.05
-            else:
-                self.synchronous_master = False
-        else:
-            print("You are currently in asynchronous mode. If this is a traffic simulation, \
-                    you could experience some issues. If it's not working correctly, switch to synchronous \
-                    mode by using traffic_manager.set_synchronous_mode(True)")
-
-        if self.args.no_rendering:
-            settings.no_rendering_mode = True
-        self.carla_world.apply_settings(settings)
-
-        blueprints = get_actor_blueprints(self.world, self.args.filterv, self.args.generationv)
+        blueprints = get_actor_blueprints(self.carla_world,
+                                          self.generator_config['filterv'],
+                                          self.generator_config['generationv'])
         if not blueprints:
             raise ValueError("Couldn't find any vehicles with the specified filters")
-        blueprintsWalkers = get_actor_blueprints(self.world, self.args.filterw, self.args.generationw)
+
+        blueprintsWalkers = get_actor_blueprints(self.carla_world,
+                                                 self.generator_config['filterw'],
+                                                    self.generator_config['generationw'])
         if not blueprintsWalkers:
             raise ValueError("Couldn't find any walkers with the specified filters")
 
-        if self.args.safe:
+        if self.generator_config['safe']:
             blueprints = [x for x in blueprints if x.get_attribute('base_type') == 'car']
-
         blueprints = sorted(blueprints, key=lambda bp: bp.id)
 
-        spawn_points = self.world.get_map().get_spawn_points()
+        spawn_points = self.carla_world.get_map().get_spawn_points()
         number_of_spawn_points = len(spawn_points)
 
-        if self.args.number_of_vehicles < number_of_spawn_points:
+        if self.number_of_vehicles < number_of_spawn_points:
             random.shuffle(spawn_points)
-        elif self.args.number_of_vehicles > number_of_spawn_points:
+        elif self.number_of_vehicles > number_of_spawn_points:
             msg = 'requested %d vehicles, but could only find %d spawn points'
-            logging.warning(msg, self.args.number_of_vehicles, number_of_spawn_points)
-            self.args.number_of_vehicles = number_of_spawn_points
+            logging.warning(msg, self.number_of_vehicles, number_of_spawn_points)
+            self.number_of_vehicles = number_of_spawn_points
 
         # @todo cannot import these directly.
         SpawnActor = carla.command.SpawnActor
@@ -103,9 +93,9 @@ class TrafficGenerator(object):
         # Spawn vehicles
         # --------------
         batch = []
-        hero = self.args.hero
+        hero = self.generator_config['hero']
         for n, transform in enumerate(spawn_points):
-            if n >= self.args.number_of_vehicles:
+            if n >= self.number_of_vehicles:
                 break
             blueprint = random.choice(blueprints)
             if blueprint.has_attribute('color'):
@@ -122,7 +112,7 @@ class TrafficGenerator(object):
 
             # spawn the cars and set their autopilot and light state all together
             batch.append(SpawnActor(blueprint, transform)
-                         .then(SetAutopilot(FutureActor, True, traffic_manager.get_port())))
+                         .then(SetAutopilot(FutureActor, True, self.tm.get_port())))
 
         for response in self.client.apply_batch_sync(batch, self.synchronous_master):
             if response.error:
@@ -131,10 +121,10 @@ class TrafficGenerator(object):
                 self.vehicles_list.append(response.actor_id)
 
         # Set automatic vehicle lights update if specified
-        if self.args.car_lights_on:
-            all_vehicle_actors = self.world.get_actors(self.vehicles_list)
+        if self.generator_config['car_lights_on']:
+            all_vehicle_actors = self.carla_world.get_actors(self.vehicles_list)
             for actor in all_vehicle_actors:
-                traffic_manager.update_vehicle_lights(actor, True)
+                self.tm.update_vehicle_lights(actor, True)
 
         # -------------
         # Spawn Walkers
@@ -142,14 +132,14 @@ class TrafficGenerator(object):
         # some settings
         percentagePedestriansRunning = 0.0  # how many pedestrians will run
         percentagePedestriansCrossing = 0.0  # how many pedestrians will walk through the road
-        if self.args.seedw:
-            self.world.set_pedestrians_seed(self.args.seedw)
-            random.seed(self.args.seedw)
+        if self.generator_config['seedw']:
+            self.carla_world.set_pedestrians_seed(self.generator_config['seedw'])
+            random.seed(self.generator_config['seedw'])
         # 1. take all the random locations to spawn
         spawn_points = []
-        for i in range(self.args.number_of_walkers):
+        for i in range(self.number_of_walkers):
             spawn_point = carla.Transform()
-            loc = self.world.get_random_location_from_navigation()
+            loc = self.carla_world.get_random_location_from_navigation()
             if (loc != None):
                 spawn_point.location = loc
                 spawn_points.append(spawn_point)
@@ -184,7 +174,7 @@ class TrafficGenerator(object):
         walker_speed = walker_speed2
         # 3. we spawn the walker controller
         batch = []
-        walker_controller_bp = self.world.get_blueprint_library().find('controller.ai.walker')
+        walker_controller_bp = self.carla_world.get_blueprint_library().find('controller.ai.walker')
         for i in range(len(self.walkers_list)):
             batch.append(SpawnActor(walker_controller_bp, carla.Transform(), self.walkers_list[i]["id"]))
         results = self.client.apply_batch_sync(batch, True)
@@ -197,37 +187,37 @@ class TrafficGenerator(object):
         for i in range(len(self.walkers_list)):
             self.all_id.append(self.walkers_list[i]["con"])
             self.all_id.append(self.walkers_list[i]["id"])
-        self.all_actors = self.world.get_actors(self.all_id)
+        self.all_actors = self.carla_world.get_actors(self.all_id)
 
         # wait for a tick to ensure client receives the last transform of the walkers we have just created
-        if self.args.asynch or not self.synchronous_master:
-            self.world.wait_for_tick()
+        if not self.synchronous_master:
+            self.carla_world.wait_for_tick()
         else:
-            self.world.tick()
+            self.carla_world.tick()
 
         # 5. initialize each controller and set target to walk to (list is [controler, actor, controller, actor ...])
         # set how many pedestrians can cross the road
-        self.world.set_pedestrians_cross_factor(percentagePedestriansCrossing)
+        self.carla_world.set_pedestrians_cross_factor(percentagePedestriansCrossing)
         for i in range(0, len(self.all_id), 2):
             # start walker
             self.all_actors[i].start()
             # set walk to random point
-            self.all_actors[i].go_to_location(self.world.get_random_location_from_navigation())
+            self.all_actors[i].go_to_location(self.carla_world.get_random_location_from_navigation())
             # max speed
             self.all_actors[i].set_max_speed(float(walker_speed[int(i / 2)]))
 
         print('spawned %d vehicles and %d walkers, press Ctrl+C to exit.' % (len(self.vehicles_list), len(self.walkers_list)))
 
         # Example of how to use Traffic Manager parameters
-        traffic_manager.global_percentage_speed_difference(30.0)
+        self.tm.global_percentage_speed_difference(30.0)
 
     def destroy(self):
-        if not self.args.asynch and self.synchronous_master:
-            settings = self.world.get_settings()
+        if self.synchronous_master:
+            settings = self.carla_world.get_settings()
             settings.synchronous_mode = False
             settings.no_rendering_mode = False
             settings.fixed_delta_seconds = None
-            self.world.apply_settings(settings)
+            self.carla_world.apply_settings(settings)
 
         print('\ndestroying %d vehicles' % len(self.vehicles_list))
         self.client.apply_batch([carla.command.DestroyActor(x) for x in self.vehicles_list])

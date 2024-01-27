@@ -11,8 +11,10 @@ import os
 from simulation.utils.option import get_args
 from simulation.world import World
 from simulation.sensors import RGBCamera, GNSS, InstanceCamera, SemanticCamera
-from simulation.config import WorldConfig, RGBCameraConfig, GNSSConfig, InstanceCameraConfig, SemanticCameraConfig, RecorderConfig
+from simulation.config import (WorldConfig, RGBCameraConfig, GNSSConfig, InstanceCameraConfig,
+                               SemanticCameraConfig, RecorderConfig, GeneratorConfig)
 from simulation.recorders import BufferRecorder
+from simulation.generator import TrafficGenerator
 
 try:
     sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
@@ -26,7 +28,9 @@ except IndexError:
 def main():
 
     world = None
+    carla_world = None
     recorder = None
+    generator = None
 
     try:
         args = get_args()
@@ -51,6 +55,9 @@ def main():
 
         world.set_ego_autopilot(True)
 
+        generator = TrafficGenerator(generator_config=GeneratorConfig, client=client)
+        generator.generate()
+
         # Third, we need to create a recorder to record the data from sensors to disk.
         recorder = BufferRecorder(recorder_config=RecorderConfig, map_name=args.map)
 
@@ -69,6 +76,17 @@ def main():
     finally:
         if world is not None:
             world.destroy()
+        if generator is not None:
+            generator.destroy()
+
+        # for sensor in carla_world.get_actors().filter('*sensor*'):
+        #     sensor.destroy()
+        #
+        # for pedestrian in carla_world.get_actors().filter('*pedestrian*'):
+        #     pedestrian.destroy()
+        #
+        # for vehicle in carla_world.get_actors().filter('*vehicle*'):
+        #     vehicle.destroy()
 
         if recorder is not None:
             recorder.flush()
