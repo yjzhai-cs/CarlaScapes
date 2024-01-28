@@ -1,7 +1,8 @@
-
+import copy
 import numpy as np
 from pascal_voc_writer import Writer
 from .util import build_projection_matrix, get_image_point
+
 
 class Bounding():
     def __init__(self, camera, camera_bp, world, ego_vehicle):
@@ -25,7 +26,7 @@ class Bounding():
         # Initialize the exporter
         writer = Writer(save_path + '_img.png', self.image_w, self.image_h)
 
-        for npc in self.world.get_actors().filter('*pedestrian*'): # vehicle
+        for npc in self.world.get_actors().filter('*vehicle*'): # vehicle
 
             # Filter out the ego vehicle
             if npc.id != self.ego_vehicle.id:
@@ -68,7 +69,7 @@ class Bounding():
 
                         # Add the object to the frame (ensure it is inside the image)
                         if x_min > 0 and x_max < self.image_w and y_min > 0 and y_max < self.image_h:
-                            writer.addObject('pedestrian', x_min, y_min, x_max, y_max)
+                            writer.addObject('vehicle', x_min, y_min, x_max, y_max)
 
             # Save the bounding boxes in the scene
         writer.save(save_path + '_bounding_box.xml')

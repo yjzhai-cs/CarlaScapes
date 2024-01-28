@@ -79,6 +79,10 @@ class BufferRecorder(Recorder):
             cv2.imwrite(os.path.join(self.save_path, '%s_%06d_%06d_img.png' % (self.map_name, timestamp, frame)),
                         self.buffer['rgb_camera'][i]['rgb_image'])
 
+            if 'bboxs' in self.buffer['rgb_camera'][i] and self.buffer['rgb_camera'][i]['bboxs'] is not None:
+                self.buffer['rgb_camera'][i]['bboxs'].save(os.path.join(self.save_path, '%s_%06d_%06d_bounding_box.xml' % (self.map_name, timestamp, frame)))
+
+
         # Save the Semantic Segmentation Image to disk
         for i in range(len(self.buffer['semantic_camera'])):
             timestamp = self.buffer['semantic_camera'][i]['timestamp']

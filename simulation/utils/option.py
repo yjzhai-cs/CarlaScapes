@@ -31,6 +31,17 @@ def get_args():
         type=str,
         default='Town10HD',
         help='The map to load (default: Town15)')
+    argparser.add_argument(
+        '-s', '--seed',
+        metavar='S',
+        type=int,
+        help='Set random device seed and deterministic mode for Traffic Manager')
+    argparser.add_argument(
+        '--tm-port',
+        metavar='P',
+        default=8000,
+        type=int,
+        help='Port to communicate with TM (default: 8000)')
 
     args = argparser.parse_args()
     return args
