@@ -66,6 +66,7 @@ class World(object):
 
         # Spawn a car as the ego vehicle
         ego_veh_bp = self.carla_world.get_blueprint_library().filter('**vehicle**')[0]
+        ego_veh_bp.set_attribute('role_name', 'hero')
 
         if self.ego_veh:
             if spawn_point is None:

@@ -10,6 +10,9 @@ class GNSS(CarlaSensor):
 
     Carla uses left-handed coordinate system.
     Ref: https://subscription.packtpub.com/book/game_development/9781784394905/1/ch01lvl1sec18/the-2d-and-3d-coordinate-systems
+
+    Why is my GPS data always close to 0？ #4806
+    Ref: https://github.com/carla-simulator/carla/discussions/4806
     """
 
     def __init__(self, name, gnss_config, parent_actor=None):

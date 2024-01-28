@@ -36,10 +36,10 @@ class SampleHelper(VisualizationHelper):
                         data = json.load(json_file)
                         # draw the point on carla map by using `carla_world.debug`
                         carla_world.debug.draw_point(location=carla.Location(data['x'], data['y'], data['z']),
-                                                     size=0.1,
-                                                     color=carla.Color(255, 0, 0),
-                                                     life_time=-1.0,
-                                                     persistent_lines=True)
+                                                     # size=0.1,
+                                                     # color=carla.Color(255, 0, 0),
+                                                     life_time=100,)
+                                                     # persistent_lines=True)
 
         while True:
             carla_world.wait_for_tick()
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     argparser.add_argument(
         '--map',
         type=str,
-        default='Town10HD',
+        default='Town10HD_Opt',
         help='The map to load (default: Town15)')
     args = argparser.parse_args()
 
@@ -74,7 +74,14 @@ if __name__ == '__main__':
         client.load_world(args.map)
         carla_world = client.get_world()
 
-        helper = SampleHelper(carla_world=carla_world, dir=PROJECT_DIR / "outputs" / args.map)
+        # Set spectator position
+        transform = carla.Transform()
+        spectator = carla_world.get_spectator()
+        bv_transform = carla.Transform(transform.location + carla.Location(z=250, x=0),
+                                       carla.Rotation(yaw=0, pitch=-90))
+        spectator.set_transform(bv_transform)
+
+        helper = SampleHelper(carla_world=carla_world, dir=PROJECT_DIR / "outputs" / args.map.split('_')[0])
 
         helper.visualize()
     except KeyboardInterrupt:
