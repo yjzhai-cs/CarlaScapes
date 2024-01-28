@@ -65,8 +65,8 @@ class BoundingBoxHelper(VisualizationHelper):
         pass
 
 if __name__ == '__main__':
-    xml_file = PROJECT_DIR / 'outputs' / 'Town10HD' / 'Town10HD_000023_4052600_bounding_box.xml'  # PASCAL VOC format XML file path
-    image_path = PROJECT_DIR / 'outputs' / 'Town10HD' / ('Town10HD_000023_4052600_color.png') # Corresponding image file path)
+    xml_file = PROJECT_DIR / 'outputs' / 'Town10HD' / 'Town10HD_000013_5025800_bounding_box.xml'  # PASCAL VOC format XML file path
+    image_path = PROJECT_DIR / 'outputs' / 'Town10HD' / ('Town10HD_000013_5025800_color.png') # Corresponding image file path)
 
     helper = BoundingBoxHelper()
     boxes = helper.parse_voc_xml(xml_file=xml_file)

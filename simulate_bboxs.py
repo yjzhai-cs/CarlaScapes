@@ -16,8 +16,6 @@ from simulation.config import (WorldConfig, RGBCameraConfig, GNSSConfig, Instanc
 from simulation.recorders import BufferRecorder
 from simulation.generator import TrafficGenerator
 
-from src.bounding import Bounding
-
 try:
     sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
         sys.version_info.major,
@@ -49,16 +47,22 @@ def main():
 
         # Second, we need to create a "World" that can hold all actors including sensors and ego vehicle.
         world = World(carla_world=carla_world, traffic_manager=traffic_manager, config=WorldConfig, spawn_point=None)
+        world.set_ego_autopilot(True)
+
+        # #738  https://github.com/carla-simulator/carla/issues/738
+        # 'It looks like that the bounding box is always extended to the direction where the pedestrian is moving'
+        # So, We need to wait for a tick to ensure client receives the last transform of the ego vehicle we have just created
+        carla_world.tick()
+
+        generator = TrafficGenerator(generator_config=GeneratorConfig, client=client)
+        generator.generate()
+
+
 
         world.add_carla_sensor(RGBBboxsCamera(name='rgb_camera', rgb_cam_config=RGBCameraConfig, parent_actor=world.ego_veh, world=carla_world))
         world.add_carla_sensor(GNSS(name='gnss', gnss_config=GNSSConfig, parent_actor=world.ego_veh))
         world.add_carla_sensor(InstanceCamera(name='instance_camera', in_cam_config=InstanceCameraConfig, parent_actor=world.ego_veh))
         world.add_carla_sensor(SemanticCamera(name='semantic_camera', ss_cam_config=SemanticCameraConfig, parent_actor=world.ego_veh))
-
-        world.set_ego_autopilot(True)
-
-        generator = TrafficGenerator(generator_config=GeneratorConfig, client=client)
-        generator.generate()
 
         # Third, we need to create a recorder to record the data from sensors to disk.
         recorder = BufferRecorder(recorder_config=RecorderConfig, map_name=args.map)
@@ -66,8 +70,6 @@ def main():
         # Fourth, we need to start the world tick.
         while True:
             world.step_forward()
-
-            world.see_ego_veh()
 
             if world.all_sensor_data['rgb_camera']['frame'] % 100 == 0:
                 print(f"Frame: {world.all_sensor_data['rgb_camera']['frame']}")
@@ -77,6 +79,8 @@ def main():
 
                 # To avoid overlapping, we need to copy the data from all_sensor_data to recorder instead of `recorder.buffering(world.all_sensor_data)`
                 recorder.buffering(copy.deepcopy(world.all_sensor_data))
+
+            world.see_ego_veh()
 
     finally:
         if world is not None:

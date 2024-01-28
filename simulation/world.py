@@ -4,6 +4,7 @@ import random
 
 from simulation.utils.weather import find_weather_presets
 from simulation.sensors import CarlaSensor
+from simulation.generator.generator import get_actor_blueprints
 
 class World(object):
     """ Class representing the simulation environment. """
@@ -65,7 +66,7 @@ class World(object):
         self.tm.set_synchronous_mode(config['world']['sync_mode'])
 
         # Spawn a car as the ego vehicle
-        ego_veh_bp = self.carla_world.get_blueprint_library().filter('**vehicle**')[0]
+        ego_veh_bp = self.carla_world.get_blueprint_library().filter('*vehicle*')[0]
         ego_veh_bp.set_attribute('role_name', 'hero')
 
         if self.ego_veh:

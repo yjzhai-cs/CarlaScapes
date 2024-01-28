@@ -8,6 +8,7 @@ from simulation.utils.util import build_projection_matrix, get_image_point
 class RGBBboxsCamera(CarlaSensor):
     """
     Class for RGB camera and 2D Bounding Boxs.
+
     """
     def __init__(self, name, rgb_cam_config, parent_actor=None, world=None):
         super().__init__(name, parent_actor)
@@ -44,7 +45,7 @@ class RGBBboxsCamera(CarlaSensor):
         # Initialize the exporter
         writer = XMLWriter('', self.image_w, self.image_h)
 
-        for npc in self.carla_world.get_actors().filter('*vehicle*'):  # vehicle
+        for npc in self.carla_world.get_actors().filter('*pedestrian*'):  # vehicle
 
             # Filter out the ego vehicle
             if npc.id != self._parent.id:
@@ -87,7 +88,7 @@ class RGBBboxsCamera(CarlaSensor):
 
                         # Add the object to the frame (ensure it is inside the image)
                         if x_min > 0 and x_max < self.image_w and y_min > 0 and y_max < self.image_h:
-                            writer.addObject('vehicle', x_min, y_min, x_max, y_max)
+                            writer.addObject('pedestrian', x_min, y_min, x_max, y_max)
 
         self.data['bboxs'] = writer
 
