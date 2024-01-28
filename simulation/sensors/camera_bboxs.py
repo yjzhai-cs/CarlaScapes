@@ -39,6 +39,14 @@ class RGBBboxsCamera(CarlaSensor):
         self.K = build_projection_matrix(self.image_w, self.image_h, fov)
 
     def bounding(self):
+
+        """
+        How to remove invisible bounding boxes?
+        client_bounding_boxes.py : remove non visible vehicles #5552
+        https://github.com/carla-simulator/carla/discussions/5552
+        https://github.com/MMNavetty/Carla_gen_GT/blob/main/modules/get_bboxes.py
+        """
+
         # Get the camera matrix
         world_2_camera = np.array(self.sensor.get_transform().get_inverse_matrix())
 
