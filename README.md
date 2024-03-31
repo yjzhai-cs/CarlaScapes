@@ -22,12 +22,15 @@
 [//]: # ()
 [//]: # (```)
 
-<div align="center">
+[//]: # (<div align="center">)
 
-<h1 style="font-family: 'Britannic Bold'; font-size: xxx-large; color: #879ab3">CarlaScapes</h1>
+[//]: # ()
+[//]: # (<h1 style="font-family: 'Britannic Bold'; font-size: xxx-large; color: #879ab3">CarlaScapes</h1>)
 
-</div>
+[//]: # ()
+[//]: # (</div>)
 
+# CarlaScapes dataset: Vehicle Semantic Segmentation
 
 ### Dataset Overview
 
