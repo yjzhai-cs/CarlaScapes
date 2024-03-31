@@ -30,7 +30,7 @@
 [//]: # ()
 [//]: # (</div>)
 
-# CarlaScapes dataset: Vehicle Semantic Segmentation
+# CarlaScapes dataset: Vehicle semantic segmentation
 
 ### Dataset Overview
 
