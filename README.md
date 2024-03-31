@@ -41,18 +41,24 @@ In the following, we give an example of different map's images.
 
 <div align="center">
     <img src="./images/Town10HD_000033_5026200_img.png" style="width: 190px">
-    <img src="./images/Town10HD_000033_5026200_color.png" style="width: 190px">
-    <img src="./images/Town10HD_000033_5026200_labelIds.png" style="width: 190px">
-    <img src="./images/Town10HD_000033_5026200_instance.png" style="width: 190px">
-</div>
-<div align="center">
     <img src="./images/Town10HD_000073_5027000_img.png" style="width: 190px">
-    <img src="./images/Town10HD_000073_5027000_color.png" style="width: 190px">
-    <img src="./images/Town10HD_000073_5027000_labelIds.png" style="width: 190px">
-    <img src="./images/Town10HD_000073_5027000_instance.png" style="width: 190px">
+    <img src="./images/Town10HD_000063_5026800_img.png" style="width: 190px">
+    <img src="./images/Town10HD_000108_5027700_img.png" style="width: 190px">
 </div>
 
+<div align="center">
+    <img src="./images/Town10HD_000033_5026200_color.png" style="width: 190px">
+    <img src="./images/Town10HD_000073_5027000_color.png" style="width: 190px">
+    <img src="./images/Town10HD_000063_5026800_color.png" style="width: 190px">
+    <img src="./images/Town10HD_000108_5027700_color.png" style="width: 190px">
+</div>
 
+<div align="center">
+    <img src="./images/Town10HD_000033_5026200_instance.png" style="width: 190px">
+    <img src="./images/Town10HD_000073_5027000_instance.png" style="width: 190px">
+    <img src="./images/Town10HD_000063_5026800_instance.png" style="width: 190px">
+    <img src="./images/Town10HD_000108_5027700_instance.png" style="width: 190px">
+</div>
 
 ### Features
 
