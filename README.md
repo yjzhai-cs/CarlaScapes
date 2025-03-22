@@ -32,6 +32,8 @@
 
 # CarlaScapes dataset: Vehicle semantic segmentation
 
+[![License: GPL v2](https://img.shields.io/badge/License-GPL_v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
+
 ### Dataset Overview
 
 CarlaScapes dataset samples from [CARLA](http://carla.org) simulator involving 12 different Maps(Town01-Town07, Town10HD, Town11-Town13, Town15). 
